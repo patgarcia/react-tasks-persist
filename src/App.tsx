@@ -3,22 +3,40 @@ import "./App.css";
 
 interface TaskProps {
   description: string;
+  checked?: boolean;
   deleteTask?: (description: string) => void;
+  checkTask?: (description: string, checked: boolean) => void;
 }
 
-const Task: React.FC<TaskProps> = ({ description, deleteTask = () => {} }) => (
-  <li>
-    <span>{description}</span>
-    <button onClick={() => deleteTask(description)}>Delete</button>
-  </li>
-);
+const Task: React.FC<TaskProps> = ({
+  description,
+  checked,
+  deleteTask = () => {},
+  checkTask = () => {},
+}) => {
+  return (
+    <li>
+      <span style={{ textDecoration: checked ? "line-through" : "none" }}>
+        {description}
+      </span>
+      <button onClick={() => deleteTask(description)}>❌</button>
+      <input
+      style={{fontSize: '3rem'}}
+        type="checkbox"
+        checked={checked}
+        onChange={() => checkTask(description, !checked)}
+      />
+    </li>
+  );
+};
 
 interface Task {
   description: string;
+  checked?: boolean;
 }
 
 const persistTasks = (tasks: Task[]): void =>
-  localStorage.setItem("tasks", JSON.stringify(tasks));
+  localStorage.setItem("react-ts-checklist-localstorage", JSON.stringify(tasks));
 
 const getTasks = () =>
   JSON.parse(localStorage.getItem("tasks") as string) ?? [];
@@ -29,7 +47,7 @@ function App() {
   const fieldElem = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    console.log({tasks, t: typeof tasks})
+    console.log({ tasks, t: typeof tasks });
 
     const handleStorageChange = () => setTasks(getTasks());
     window.addEventListener("storage", handleStorageChange);
@@ -57,7 +75,9 @@ function App() {
       ev.preventDefault();
       const taskExists = tasks.some((task) => task.description === field.value);
       const formData = new FormData(ev.currentTarget);
-      const {value} = Object.fromEntries(formData.entries()) as {value: string};
+      const { value } = Object.fromEntries(formData.entries()) as {
+        value: string;
+      };
       if (value?.length && !taskExists) {
         setTasks((tasks) => {
           const updatedTasks = [...tasks, { description: value }];
@@ -80,9 +100,25 @@ function App() {
     });
   }, []);
 
+  const checkTask = useCallback(
+    (description: string, checked: boolean): void => {
+      setTasks((tasks) => {
+        tasks.forEach((task, index) => {
+          if (task.description === description) {
+            tasks[index] = { ...task, checked };
+          }
+        });
+        const newTasks = [...tasks];
+        persistTasks(newTasks);
+        return newTasks;
+      });
+    },
+    []
+  );
+
   return (
     <div className="app">
-      <h1>Todo List</h1>
+      <h1>Check List</h1>
       <div>
         <form onSubmit={submitHandler}>
           <input
@@ -103,7 +139,9 @@ function App() {
           <Task
             key={task.description}
             description={task.description}
+            checked={task.checked}
             deleteTask={deleteTask}
+            checkTask={checkTask}
           />
         ))}
       </ul>
