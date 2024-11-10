@@ -29,6 +29,8 @@ function App() {
   const fieldElem = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    console.log({tasks, t: typeof tasks})
+
     const handleStorageChange = () => setTasks(getTasks());
     window.addEventListener("storage", handleStorageChange);
 
@@ -54,16 +56,18 @@ function App() {
     (ev: React.FormEvent<HTMLFormElement>) => {
       ev.preventDefault();
       const taskExists = tasks.some((task) => task.description === field.value);
-      if (field.value.length && !taskExists) {
+      const formData = new FormData(ev.currentTarget);
+      const {value} = Object.fromEntries(formData.entries()) as {value: string};
+      if (value?.length && !taskExists) {
         setTasks((tasks) => {
-          const updatedTasks = [...tasks, { description: field.value }];
+          const updatedTasks = [...tasks, { description: value }];
           persistTasks(updatedTasks);
           return updatedTasks;
         });
         setField({ value: "" });
       }
     },
-    [field]
+    [tasks]
   );
 
   const deleteTask = useCallback((description: string): void => {
@@ -86,6 +90,7 @@ function App() {
             onChange={changeHandler}
             type="text"
             value={field.value}
+            name="value"
             placeholder="Add your task"
           />
           <div>
