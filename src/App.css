@@ -1,8 +1,90 @@
 #root {
-  max-width: 1280px;
+  /* max-width: 1280px; */
   margin: 0 auto;
-  padding: 2rem;
+  /* padding: 2rem; */
   text-align: center;
+}
+
+input[type=checkbox]{
+  transform: scale(2);
+}
+button.nix {
+  background: none;
+  outline: none;
+  border: none; 
+}
+button.nix:focus, button.nix:focus-visible, button.nix:hover {
+  outline: none;
+  border: none; 
+}
+
+ul.check-list{
+  list-style: none;
+  padding-left: none;
+  width: fit-content;
+  padding: 0 0 6rem 0;
+  margin: 0 auto;
+  max-width: 80%;
+}
+
+ul.check-list li{
+  display: flex;
+  align-items: baseline;
+  margin-bottom: .5rem;
+}
+
+.description{
+  font-size: 2rem;
+  margin-left: 1rem;
+  font-size: 2rem;
+  line-height: 2.2rem;
+}
+.strike{
+  text-decoration: line-through;
+}
+.hover:hover{
+  filter: invert(1);
+}
+.checklist-field{
+  font-size: 1.5rem;
+  padding: .75rem 1.5rem;
+}
+.checklist-submit{
+  font-size: 1.5rem;
+}
+
+.checklist-form {
+  position: sticky;
+  top: 0;
+  z-index: 99;
+  backdrop-filter: blur(0px);
+  transition:cubic-bezier(0.19, 1, 0.22, 1) all 1s;
+  padding-top: 1rem;
+  width: 100vw;
+  margin-bottom: 2rem;
+}
+
+.form-header{
+  transition:cubic-bezier(0.19, 1, 0.22, 1) all 1s;
+  padding: 6rem 0 4rem;
+}
+
+.form-header h1{
+  position: relative;
+  line-height: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.blur-background{
+  backdrop-filter: blur(10px);
+  background-color: rgba(0,0,0,0.3);
+}
+
+.checklist-form-sticky{
+  padding-bottom: 2rem;
+  margin-bottom: 0;
+
 }
 
 .logo {

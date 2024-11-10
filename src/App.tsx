@@ -1,5 +1,36 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, {
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  useMemo,
+} from "react";
 import "./App.css";
+import clsx from "clsx";
+
+const STORAGE_KEY = "react-ts-checklist-localstorage";
+
+type ObserverCallbackType = (
+  entries: IntersectionObserverEntry[],
+  observer: IntersectionObserver
+) => void;
+
+const useIntersectionObserver = () => {
+  const [isIntersected, setIsIntersected] = useState<boolean>(false);
+
+  const observerCallback: ObserverCallbackType = useCallback((entries) => {
+    const entry = entries[0];
+    if (entry) {
+      setIsIntersected(entry.isIntersecting);
+    }
+  }, []);
+
+  const observer = useMemo(
+    () => new IntersectionObserver(observerCallback),
+    []
+  );
+  return { observer, isIntersected };
+};
 
 interface TaskProps {
   description: string;
@@ -14,18 +45,21 @@ const Task: React.FC<TaskProps> = ({
   deleteTask = () => {},
   checkTask = () => {},
 }) => {
+  const className = clsx("description", { strike: checked });
+
   return (
     <li>
-      <span style={{ textDecoration: checked ? "line-through" : "none" }}>
-        {description}
-      </span>
-      <button onClick={() => deleteTask(description)}>❌</button>
+      <button className="nix hover" onClick={() => deleteTask(description)}>
+        ❌
+      </button>
       <input
-      style={{fontSize: '3rem'}}
         type="checkbox"
         checked={checked}
         onChange={() => checkTask(description, !checked)}
       />
+      <div className={className}>
+        {description}
+      </div>
     </li>
   );
 };
@@ -36,15 +70,24 @@ interface Task {
 }
 
 const persistTasks = (tasks: Task[]): void =>
-  localStorage.setItem("react-ts-checklist-localstorage", JSON.stringify(tasks));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
 
 const getTasks = () =>
-  JSON.parse(localStorage.getItem("tasks") as string) ?? [];
+  JSON.parse(localStorage.getItem(STORAGE_KEY) as string) ?? [];
 
 function App() {
   const [field, setField] = useState<{ value: string }>({ value: "" });
   const [tasks, setTasks] = useState<Task[]>(getTasks());
   const fieldElem = useRef<HTMLInputElement>(null);
+
+  const { observer, isIntersected } = useIntersectionObserver();
+  const observedRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (observedRef.current) {
+      observer.observe(observedRef.current);
+    }
+  }, []);
 
   useEffect(() => {
     console.log({ tasks, t: typeof tasks });
@@ -54,6 +97,15 @@ function App() {
 
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
+
+  const formClass = clsx("checklist-form", {
+    "checklist-form-sticky": !isIntersected,
+    "blur-background": !isIntersected,
+  });
+
+  const headerClass = clsx("form-header", {
+    "blur-background": !isIntersected,
+  });
 
   const changeHandler = useCallback(
     (ev: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,7 +132,8 @@ function App() {
       };
       if (value?.length && !taskExists) {
         setTasks((tasks) => {
-          const updatedTasks = [...tasks, { description: value }];
+          const updatedTasks = [...tasks];
+          updatedTasks.unshift({ description: value });
           persistTasks(updatedTasks);
           return updatedTasks;
         });
@@ -118,23 +171,27 @@ function App() {
 
   return (
     <div className="app">
-      <h1>Check List</h1>
-      <div>
-        <form onSubmit={submitHandler}>
-          <input
-            ref={fieldElem}
-            onChange={changeHandler}
-            type="text"
-            value={field.value}
-            name="value"
-            placeholder="Add your task"
-          />
-          <div>
-            <button>Submit</button>
-          </div>
-        </form>
-      </div>
-      <ul>
+      <header className={headerClass}>
+      <h1><img src="/checkmark.svg" alt="checkmark" style={{position: 'absolute', height: '2rem', top: '-2rem', marginLeft: '-2rem', opacity: '.7'}} />Checklist</h1>
+      </header>
+      <div ref={observedRef}></div>
+      <form className={formClass} style={{}} onSubmit={submitHandler}>
+        <div className="form-input" style={{}}>
+
+        <input
+          className="checklist-field"
+          ref={fieldElem}
+          onChange={changeHandler}
+          type="text"
+          value={field.value}
+          name="value"
+          placeholder="Add your task"
+        />
+        <button className="checklist-submit">Submit</button>
+        </div>
+      </form>
+
+      <ul className="check-list">
         {tasks.map((task) => (
           <Task
             key={task.description}
